@@ -9,7 +9,7 @@ The need to develop this component arises from using an incremental encoder in a
 
 On GitHub there are many components developed for esp32, some very good like [David Antliff](https://github.com/DavidAntliff/esp32-rotary-encoder-example). While it works, it makes extensive use of IRQs to decode the two bit gray code. 
 
-Therefore, to reduce misfires due to contact bounces and lack of Schmitt trigger, I used the strategy of defining one of the pins as clock (A) and the other as data (B), in idle state the irq clock is enabled and data disabled. When the user changes the position of the shaft, the isr is triggered which deactivates the irq clock, enables the irq data and programs a timer, which when it expires defines the position and the state, and the last step is to wait for the data irq to return to the idle state.
+Therefore, to reduce misfires due to contact bounces and lack of Schmitt trigger, I used the strategy of defining one of the pins as clock (A) and the other as data (B), in idle state the irq clock is enabled and data disabled. When the user changes the shaft position, the isr is triggered which deactivates the irq clock, enables the irq data and programs a timer, which when it expires defines the position and the state, and the last step is to wait for the data irq to return to the idle state.
 
 ## Circuit
 

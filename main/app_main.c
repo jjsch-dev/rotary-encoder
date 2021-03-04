@@ -48,10 +48,11 @@ static void rotenc_log_event(rotenc_event_t event)
 
 void app_main()
 {
-    // esp32-rotary-encoder requires that the GPIO ISR service is installed before calling rotenc_register()
+    // esp32-rotary-encoder requires that the GPIO ISR service is installed before calling rotenc_init()
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
 
-    // Initialise the rotary encoder device with the GPIOs for A and B signals
+    // Initialise the rotary encoder device with the GPIOs for clock (A) and data (B) signals
+    // and the debounce time, by default 1 mS.
     rotenc_info_t info = { 0 };
     ESP_ERROR_CHECK(rotenc_init(&info, 
                                 CONFIG_ROT_ENC_CLK_GPIO, 
@@ -78,7 +79,7 @@ void app_main()
 
     while (1) {
 #if CONFIG_REPORT_MODE_QUEUE
-        // Wait for incoming events on the event queue.
+        // Wait for incoming events from the queue.
         rotenc_event_t event = { 0 };
         if (rotenc_wait_event(&info, &event) == ESP_OK) {
             rotenc_log_event(event);

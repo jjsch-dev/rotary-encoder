@@ -164,7 +164,7 @@ static void rotenc_button_timer_callback(void *arg)
 }
 
 /**
- * @brief Set the anti-bounce timer to 100 uS and stop the IRQ. 
+ * @brief Set the anti-bounce timer to 10 uS and stop the IRQ. 
  *        NOTE: the button's callback function is invoked in the 
  *        timer to quickly release the IRQ.
  * @param[in] args Pointer to initialised rotary encoder info structure.
