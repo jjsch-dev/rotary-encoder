@@ -19,3 +19,9 @@ On GitHub there are many components developed for esp32, some very good like [Da
 
 ![alt text](images/Schematic.png)
 
+## Prototype 
+This component is part of an IOT project so I started testing it on the following development board.
+
+![alt text](images/pcb_proto_1.png)
+![alt text](images/pcb_proto_2.png)
+![alt text](images/pcb_proto_3.png)
