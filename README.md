@@ -67,9 +67,23 @@ For mechanical encoders with pushbuttons, and although this functionality can be
 Callback Example
 ----------------
 ```c
-    /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
-    rotenc_info_t info = { 0 };
-    ESP_ERROR_CHECK(rotenc_init(&info, 
-                                CONFIG_ROT_ENC_CLK_GPIO, 
-                                CONFIG_ROT_ENC_DTA_GPIO, 
-                                CONFIG_ROT_ENC_DEBOUNCE));
+    
+    static void rotenc_log_event(rotenc_event_t event)
+    {
+        ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
+                  event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET")  ;
+    }
+
+    void app_main()
+    {
+        /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+        rotenc_info_t info = { 0 };
+        ESP_ERROR_CHECK(rotenc_init(&info, 
+                                    CONFIG_ROT_ENC_CLK_GPIO, 
+                                    CONFIG_ROT_ENC_DTA_GPIO, 
+                                    CONFIG_ROT_ENC_DEBOUNCE));
+
+        while (1) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+    }
