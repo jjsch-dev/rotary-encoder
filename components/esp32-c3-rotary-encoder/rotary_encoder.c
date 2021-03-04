@@ -33,8 +33,11 @@
 // Use a single-item queue so that the last value can be easily overwritten by the interrupt handler
 #define EVENT_QUEUE_LENGTH 1
 
-#define TEST_POINT_PIN 
-
+/**
+ * @brief Toggle test pin to debug irqs events.
+ * @param[in] void
+ * @return void
+ */
 static void rotenc_toggle_test_pin(void)
 {
 #if CONFIG_TEST_PIN_ENABLE    
