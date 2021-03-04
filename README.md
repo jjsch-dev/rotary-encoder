@@ -51,13 +51,21 @@ The following image shows the false trips by mechanical contact, you can see tha
 
 ![alt text](images/TEK_timer.png)
 
-## Api Use
-To use the component, you have to initialize it with the `rotenc_init` function, which takes as parameters the pins where the clock (A) and the data (B) are connected plus the time for the anti-bounce, if successful it returns ESP_OK.
+## Brief description of the API
+To use the component, you have to initialize it with the `rotenc_init` function, which takes as parameters the pins where the clock (A) and data (B) are connected plus the time for the anti-bounce, if successful it returns ESP_OK.
 
 The driver can notify the event in three different ways, by Polling, by Freertos Queue, or through function callback. Queuing and polling have no requirements, but the callback function should be used very carefully so as not to perform blocking/delaying operations, as this could affect the performance of the esp_timer component.
 
-Example
--------
+Note: if you use the example application you can configure the pins and the notification mode with the `idf.py menuconfig`.
+
+Para usar el callback hay que llamar la funcion `rotenc_set_event_callback` y para cola de mensajes `rotenc_set_event_queue` en conjunto con la funcion `rotenc_wait_event`. Ambas retorna un la estructura `rotenc_event_t` que contiene el campo de posicion y sentido de giro detectado. 
+
+To use the callback you have to call the `rotenc_set_event_callback` function and for the message queue` rotenc_set_event_queue` together with the `rotenc_wait_event` function. Both return a `rotenc_event_t` structure that contains the position fields and the detected direction of rotation.
+
+For mechanical encoders with pushbuttons, and although this functionality can be implemented very easily with espressif idf, a callback can be configured with the `rotenc_init_button` function.
+
+Callback Example
+----------------
 ```c
     /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
     rotenc_info_t info = { 0 };

@@ -68,7 +68,7 @@ config PUSH_BUTTON
 
 config FLIP_DIRECTION
 	bool "Flip direction"
-	default y
+	default n
 	help
 		Set to reverse the clockwise/counterclockwise sense.
 

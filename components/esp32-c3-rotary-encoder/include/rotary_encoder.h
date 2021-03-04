@@ -162,7 +162,7 @@ esp_err_t rotenc_uninit(rotenc_info_t * info);
  * @param[in] wait_time_ms Time in mS that waits for the reception of an event.
  * @return ESP_OK if successful, or ESP_ERR_* if an error.
  */
-esp_err_t rotenc_create_queue(rotenc_info_t * info, uint32_t wait_time_ms);
+esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms);
 
 /**
  * @brief Configure the callback function to proccess the rotary event.

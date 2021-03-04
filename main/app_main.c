@@ -70,7 +70,7 @@ void app_main()
 
 #if CONFIG_REPORT_MODE_QUEUE
     ESP_LOGI(TAG, "Report mode by freertos queue" );
-    ESP_ERROR_CHECK(rotenc_create_queue(&info, 1000));
+    ESP_ERROR_CHECK(rotenc_set_event_queue(&info, 1000));
 #elif CONFIG_REPORT_MODE_CALLBACK
     ESP_LOGI(TAG, "Report mode by function callback" );
     ESP_ERROR_CHECK(rotenc_set_event_callback(&info, rotenc_log_event));

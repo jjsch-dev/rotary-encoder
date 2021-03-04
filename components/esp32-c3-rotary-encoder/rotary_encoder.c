@@ -309,7 +309,7 @@ esp_err_t err = ESP_OK;
     return err;
 }
 
-esp_err_t rotenc_create_queue(rotenc_info_t * info, uint32_t wait_time_ms)
+esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms)
 {
     esp_err_t err = ESP_OK;
 
