@@ -88,3 +88,42 @@ Callback Example
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
+
+Push Button and Queue Example
+-----------------------------
+```c
+    static void button_callback(void* arg)
+    {
+        rotenc_info_t * info = (rotenc_info_t*) arg;
+        ESP_LOGI(TAG, "Reset rotary encoder");
+        ESP_ERROR_CHECK(rotenc_reset(info));
+    }
+
+    static void rotenc_log_event(rotenc_event_t event)
+    {
+        ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
+                  event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET")  ;
+    }
+
+    void app_main()
+    {
+        /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+        rotenc_info_t info = { 0 };
+        ESP_ERROR_CHECK(rotenc_init(&info, 
+                                    CONFIG_ROT_ENC_CLK_GPIO, 
+                                    CONFIG_ROT_ENC_DTA_GPIO, 
+                                    CONFIG_ROT_ENC_DEBOUNCE));
+        ESP_ERROR_CHECK(rotenc_set_event_queue(&info, 1000));
+        ESP_ERROR_CHECK(rotenc_init_button(&info, 
+                                       CONFIG_ROT_ENC_BUTTON_GPIO, 
+                                       CONFIG_ROT_ENC_BUTTON_DEBOUNCE, 
+                                       button_callback));
+
+        while (1) {
+            // Wait for incoming events on the event queue.
+            rotenc_event_t event = { 0 };
+            if (rotenc_wait_event(&info, &event) == ESP_OK) {
+                rotenc_log_event(event);
+            }
+        }
+    }
