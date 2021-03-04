@@ -29,13 +29,13 @@ This component is part of an IOT project so I started testing it on the followin
 ![alt text](images/pcb_proto_3.png)
 
 ## Behavior analysis
-To viewing events of IRQs a test PIN is connected to an oscilloscope channel.
-The following images show oscillograms with typical events when the encoder is operated. In all channels 1 (yellow) is connected to the clock pin, channel 2 (light blue) is connected to the data pin, and channel 3 (purple) is connected to the test pin.
+To view IRQ events, a test PIN is connected to an oscilloscope channel.
+The following images show oscillograms with typical events when the encoder is operated, for all images: channels 1 (yellow) are connected to the clock pin, channel 2 (light blue) is connected to the data pin, and channel 3 ( violet) is connected to the test pin.
 
-In the configuration menu there are two options that allow you to enable debugging of irqs events and choose the GPIO, please use `idf.py menuconfig`.
+In the configuration menu there are two options that allow you to enable debugging of irqs events and choose the GPIO for the test pin, please use `idf.py menuconfig`.
 
 The following image shows the one-step rotation without bouncing of the mechanical contacts.
-When the clock goes down, it can be seen how the test channel toggle indicating that the firmware is running the irq that triggers the timer and disables the clock irq, and 1 mS later we see that the control channel toggle again indicating that the routine validated the encoder status, and since the data irq had been activated previously, a last toggle indicate that the cycle is starting again (clock irq activated and data irq deactivated).
+When the clock goes down, the test channel toggle indicating that the firmware is running the isr that triggers the timer and disables the clock irq, and 1 mS later we see that the control channel toggle again indicating that the routine validated the encoder status, and since the data irq had been activated previously, a last toggle indicate that the cycle is starting again (clock irq activated and data irq deactivated).
 
 ![alt text](images/TEK_one_step_ok.png)
 
@@ -50,3 +50,18 @@ The following image shows the false trips by the mechanical contact, it can be s
 The following image shows the false trips by mechanical contact, you can see that there is a 1mS timer re-trigger because the routine does not read the clock pin low.
 
 ![alt text](images/TEK_timer.png)
+
+## Api Use
+To use the component, you have to initialize it with the `rotenc_init` function, which takes as parameters the pins where the clock (A) and the data (B) are connected plus the time for the anti-bounce, if successful it returns ESP_OK.
+
+The driver can notify the event in three different ways, by Polling, by Freertos Queue, or through function callback. Queuing and polling have no requirements, but the callback function should be used very carefully so as not to perform blocking/delaying operations, as this could affect the performance of the esp_timer component.
+
+Example
+-------
+```c
+    /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+    rotenc_info_t info = { 0 };
+    ESP_ERROR_CHECK(rotenc_init(&info, 
+                                CONFIG_ROT_ENC_CLK_GPIO, 
+                                CONFIG_ROT_ENC_DTA_GPIO, 
+                                CONFIG_ROT_ENC_DEBOUNCE));
