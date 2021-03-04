@@ -17,6 +17,8 @@ On GitHub there are many components developed for esp32, some very good like [Da
 4. Connect CLK (pin A) to an ESP32-C3 GPIO.
 5. Use `idf.py menuconfig` to configure the correct ESP32-C3 GPIOs according to the previous connections.
 
+While not necessary to stabilize the encoder behavior due to mechanical contact false tripping, two 10 nF capacitors were added to improve EMI performance.
+
 ![alt text](images/Schematic.png)
 
 ## Prototype 
@@ -25,3 +27,14 @@ This component is part of an IOT project so I started testing it on the followin
 ![alt text](images/pcb_proto_1.png)
 ![alt text](images/pcb_proto_2.png)
 ![alt text](images/pcb_proto_3.png)
+
+## Behavior analysis
+To viewing events of IRQs a test PIN is connected to an oscilloscope channel.
+The following images show oscillograms with typical events when the encoder is operated. In all channels 1 (yellow) is connected to the clock pin, channel 2 (light blue) is connected to the data pin, and channel 3 (purple) is connected to the test pin.
+
+In the configuration menu there are two options that allow you to enable debugging of irqs events and choose the GPIO, please use `idf.py menuconfig`.
+
+The following image shows the one-step rotation without bouncing of the mechanical contacts.
+When the clock goes down, it can be seen how the test channel changes state indicating that the firmware is running the irq that triggers the timer and disables the clock irq, and 1 mS later we see that the control channel changes state indicating that the routine validated the encoder status, and since the data irq had been activated previously, we see that the test pin changes state again, indicating that the cycle is starting again (clock irq activated and data irq deactivated).
+
+![alt text](images/TEK_one_step_ok.png)

@@ -33,7 +33,14 @@
 // Use a single-item queue so that the last value can be easily overwritten by the interrupt handler
 #define EVENT_QUEUE_LENGTH 1
 
-#define TEST_POINT_PIN 4
+#define TEST_POINT_PIN 
+
+static void rotenc_toggle_test_pin(void)
+{
+#if CONFIG_TEST_PIN_ENABLE    
+    gpio_set_level(CONFIG_ROT_ENC_TEST_PIN_GPIO, !gpio_get_level(CONFIG_ROT_ENC_TEST_PIN_GPIO));
+#endif
+}
 
 static void rotenc_enable_clk_irq(rotenc_info_t * info)
 {
@@ -62,7 +69,7 @@ static void rotenc_debounce_callback(void *arg)
     if (!gpio_get_level(info->pin_clk) && 
        (info->irq_data_level == gpio_get_level(info->pin_dta))) {
         
-        gpio_set_level(TEST_POINT_PIN, !gpio_get_level(TEST_POINT_PIN));
+        rotenc_toggle_test_pin();
         
         // Reverses rotation direction when flip is enabled.
         bool data_level = info->irq_data_level ? true : false;
@@ -101,7 +108,7 @@ static void rotenc_isr_dta(void * args)
     rotenc_info_t * info = (rotenc_info_t *)args;
     rotenc_enable_clk_irq(info);
     esp_timer_stop(info->debounce_timer);
-    gpio_set_level(TEST_POINT_PIN, !gpio_get_level(TEST_POINT_PIN));
+    rotenc_toggle_test_pin();
 }
 
 /**
@@ -114,7 +121,7 @@ static void rotenc_isr_clk(void * args)
     rotenc_info_t * info = (rotenc_info_t *)args;
     rotenc_disable_clk_irq(info);
 
-    gpio_set_level(TEST_POINT_PIN, !gpio_get_level(TEST_POINT_PIN));
+    rotenc_toggle_test_pin();
   
     info->irq_data_level = gpio_get_level(info->pin_dta);
 
@@ -199,8 +206,10 @@ esp_err_t rotenc_init(rotenc_info_t * info,
         gpio_isr_handler_add(info->pin_clk, rotenc_isr_clk, info);
         gpio_isr_handler_add(info->pin_dta, rotenc_isr_dta, info);
 
-        gpio_pad_select_gpio(TEST_POINT_PIN);
-        gpio_set_direction(TEST_POINT_PIN, GPIO_MODE_INPUT_OUTPUT);
+#if CONFIG_TEST_PIN_ENABLE
+        gpio_pad_select_gpio(CONFIG_ROT_ENC_TEST_PIN_GPIO);
+        gpio_set_direction(CONFIG_ROT_ENC_TEST_PIN_GPIO, GPIO_MODE_INPUT_OUTPUT);
+#endif
     } else {
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;

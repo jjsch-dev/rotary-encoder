@@ -71,4 +71,19 @@ config FLIP_DIRECTION
 	default y
 	help
 		Set to reverse the clockwise/counterclockwise sense.
+
+config TEST_PIN_ENABLE
+	bool "Test pin enable"
+	default y
+	help
+		Enable irq event debugging.	
+
+config ROT_ENC_TEST_PIN_GPIO
+	int "Test Pin GPIO number"
+	range 0 39
+	default 4
+	help
+		GPIO number (IOxx) to Enable irq event debugging.
+
+		Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
 endmenu
