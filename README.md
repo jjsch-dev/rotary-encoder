@@ -41,7 +41,7 @@ When the clock goes down, it can be seen how the test channel toggle indicating 
 
 The following image shows the fast rotation of several steps, the smallest pulse lasts approximately 3 mS.
 
-![alt text](images/TEK_fast_step_ok.png)
+![alt text](images/TEK_fast_steps_ok.png)
 
 The following image shows the false trips by the mechanical contact, it can be seen that there is no retrigger of the 1mS timer because the routine manages to read the clock pin low.
 
