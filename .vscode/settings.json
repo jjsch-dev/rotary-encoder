@@ -1,0 +1,18 @@
+{
+    "C_Cpp.clang_format_style": "Visual Studio",
+    "editor.formatOnSave": false,
+    "[cpp]": {
+        "editor.quickSuggestions": true
+    },
+    "[c]": {
+        "editor.quickSuggestions": true
+    },
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+    "C_Cpp.default.compilerPath": "/home/jjsch/.espressif/tools/riscv32-esp-elf/1.24.0.123_64eb9ff-8.4.0/riscv32-esp-elf",
+    "cmake.configureOnOpen": true,
+    "idf.flashType": "UART",
+    "idf.port": "/dev/ttyUSB2",
+    "files.associations": {
+        "*.tcc": "c"
+    }
+}

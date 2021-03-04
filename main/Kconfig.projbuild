@@ -1,0 +1,74 @@
+menu "esp32-c3-rotary-encoder"
+
+config ROT_ENC_CLK_GPIO
+    int "Rotary Encoder clock (A) GPIO number"
+	range 0 39
+	default 0
+	help
+		GPIO number (IOxx) to which the rotary encoder clock is connected.
+
+		Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+
+config ROT_ENC_DTA_GPIO
+    int "Rotary Encoder data (B) GPIO number"
+	range 0 39
+	default 1
+	help
+		GPIO number (IOxx) to which the rotary encoder data is connected.
+
+		Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+
+config ROT_ENC_DEBOUNCE
+    int "Rotary Encoder debounce in uS"
+	range 100 1000000
+	default 1000
+	help
+		Delay in uS to read the state of the clock pin after irq happened.
+
+		The time sets the maximum decoding speed.
+
+config ROT_ENC_BUTTON_GPIO
+	int "Button GPIO number"
+	range 0 39
+	default 10
+	help
+		GPIO number (IOxx) to which the button is connected.
+
+		Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+		
+config ROT_ENC_BUTTON_DEBOUNCE
+	int "Button debounce in uS"
+	range 100 1000000
+	default 100000
+	help
+		Delay in uS to verify that the button pin returned to the idle state.
+
+		The time sets the maximum pressing speed.
+
+choice REPORT_MODE_EVENT
+    bool "Position event report mode"
+    default REPORT_MODE_CALLBACK
+    help
+        Select the way the position report is processed, for example a FreeRtos queue, a callback function, or status polling.
+
+
+    config REPORT_MODE_CALLBACK
+        bool "Callback function"
+    config REPORT_MODE_POLLING
+        bool "Polling state"
+	config REPORT_MODE_QUEUE
+		bool "Freertos Queue"
+endchoice
+
+config PUSH_BUTTON
+	bool "Push button Support"
+	default y
+	help
+		Enable this option if you want to use the push button.
+
+config FLIP_DIRECTION
+	bool "Flip direction"
+	default y
+	help
+		Set to reverse the clockwise/counterclockwise sense.
+endmenu
