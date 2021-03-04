@@ -82,6 +82,7 @@ Callback Example
                                     CONFIG_ROT_ENC_CLK_GPIO, 
                                     CONFIG_ROT_ENC_DTA_GPIO, 
                                     CONFIG_ROT_ENC_DEBOUNCE));
+        ESP_ERROR_CHECK(rotenc_set_event_callback(&info, rotenc_log_event));
 
         while (1) {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
