@@ -63,9 +63,9 @@ typedef int32_t rotenc_position_t;
  */
 typedef enum
 {
-    ROTENC_NOT_SET = 0,        ///< Direction not yet known (stationary since reset)
-    ROTENC_CW,
-    ROTENC_CCW,
+    ROTENC_NOT_SET = 0,             ///< Direction unknown.
+    ROTENC_CW,                      ///< Clockwise, depends on the flip option.
+    ROTENC_CCW,                     ///< Counter clockwise, depends on the flip option.
 } rotenc_direction_t;
 
 /**
@@ -73,40 +73,40 @@ typedef enum
  */
 typedef struct
 {
-    rotenc_position_t position;    ///< Numerical position since reset. This value increments on clockwise rotation, and decrements on counter-clockewise rotation. Set to zero on reset.
-    rotenc_direction_t direction;  ///< Direction of last movement. Set to NOT_SET on reset.
+    rotenc_position_t position;     ///< Numerical position since reset. 
+    rotenc_direction_t direction;   ///< Direction of last movement. Set to NOT_SET on reset.
 } rotenc_state_t;
 
 /**
- * @brief Struct represents a queued event, used to communicate current position to a waiting task
+ * @brief Struct represents an event, used to communicate current position to a waiting task
  */
 typedef struct
 {
-    rotenc_state_t state;  ///< The device state corresponding to this event
+    rotenc_state_t state;           ///< The device state corresponding to this event
 } rotenc_event_t;
 
 /**
- * @brief Event callback function type
+ * @brief Position Event callback function type
  * @param event direction and numerical position. 
  */
 typedef void (*rotenc_event_cb_t)(rotenc_event_t event);
 
 /**
- * @brief Event callback function type
+ * @brief Button callback function type
  * @param arg pointer to opaque user-specific data
  */
 typedef void (*rotenc_button_cb_t)(void*);
 
 /**
- * @brief Struct Contains information to control the button.
+ * @brief Struct contains information to control the button.
  */
 typedef struct 
 {
     rotenc_button_cb_t callback;        ///< Function to call when button is pressed.
     gpio_num_t pin;                     ///< GPIO for push button.
     esp_timer_handle_t timer;           ///< Software timer to apply the anti-bounce.
-    uint32_t debounce_us;               ///< Period in uS that the anti-bounce takes.
-    bool cb_invoked;                    ///< The button callback has already been invoked.
+    uint32_t debounce_us;               ///< Period in uS for anti-bounce.
+    bool cb_invoked;                    ///< True, the button callback has already been invoked.
 } rotenc_button_t;
 
 /**
@@ -115,9 +115,9 @@ typedef struct
  */
 typedef struct
 {
-    gpio_num_t pin_clk;                 ///< GPIO for Signal A from the rotary encoder device.
-    gpio_num_t pin_dta;                 ///< GPIO for Signal B from the rotary encoder device.
-    QueueHandle_t queue;                ///< Handle for event queue, created by ::rotenc_create_queue
+    gpio_num_t pin_clk;                 ///< GPIO for clock (A) from the rotary encoder device.
+    gpio_num_t pin_dta;                 ///< GPIO for data (B) from the rotary encoder device.
+    QueueHandle_t queue;                ///< Handle for event queue.
     esp_timer_handle_t debounce_timer;  ///< Software timer to apply the anti-bounce.
     uint32_t debounce_us;               ///< Period in uS that the anti-bounce takes. 
     volatile rotenc_state_t state;      ///< Device state.
@@ -133,9 +133,9 @@ typedef struct
  *        This function will set up the GPIOs as needed,
  *        Note: this function assumes that gpio_install_isr_service(0) has already been called.
  * @param[in, out] info Pointer to allocated rotary encoder info structure.
- * @param[in] pin_clk GPIO number for rotary encoder output A (triggers the IRQ on a falling edge).
- * @param[in] pin_data GPIO number for rotary encoder output B (read only, to detect the direction of rotation).
- * @param[in] debounce_us Period in uS that the anti-bounce takes, by default 5000 uS.
+ * @param[in] pin_clk GPIO number for clock (A) (triggers the IRQ on a falling edge).
+ * @param[in] pin_data GPIO number for data (B) (read only, to detect the direction of rotation).
+ * @param[in] debounce_us Period in uS that the anti-bounce takes, by default 1000 uS.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
 esp_err_t rotenc_init(rotenc_info_t * info, gpio_num_t pin_a, gpio_num_t pin_b, uint32_t debounce_us);
@@ -149,15 +149,15 @@ esp_err_t rotenc_init(rotenc_info_t * info, gpio_num_t pin_a, gpio_num_t pin_b, 
 esp_err_t rotenc_flip_direction(rotenc_info_t * info);
 
 /**
- * @brief Remove the interrupt handlers installed by ::rotenc_init.
- *        Note: GPIOs will be left in the state they were configured by ::rotenc_init.
+ * @brief Eliminate interrupt handlers and if the event was by queue, delete it.
+ *        
  * @param[in] info Pointer to initialised rotary encoder info structure.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
 esp_err_t rotenc_uninit(rotenc_info_t * info);
 
 /**
- * @brief Create a queue handle suitable for use as an event queue.
+ * @brief Configure a queue to proccess the rotary event.
  * @param[in] info Pointer with the initialised rotary encoder info structure.
  * @param[in] wait_time_ms Time in mS that waits for the reception of an event.
  * @return ESP_OK if successful, or ESP_ERR_* if an error.
@@ -173,8 +173,7 @@ esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms);
 esp_err_t rotenc_set_event_callback(rotenc_info_t * info, rotenc_event_cb_t callback);
 
 /**
- * @brief Set the driver to use the specified queue as an event queue.
- *        It is recommended that a queue constructed by ::rotenc_create_queue is used.
+ * @brief Wait queue events. 
  * @param[in] info Pointer with the initialised rotary encoder info structure.
  * @param[in] event Pointer of the struct to store the event.
  * @return ESP_OK if successful, ESP_TIMEOUT when event timeout expired. or ESP_ERR_* if an error occurred.

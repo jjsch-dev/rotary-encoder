@@ -45,12 +45,22 @@ static void rotenc_toggle_test_pin(void)
 #endif
 }
 
+/**
+ * @brief Enable clock IRQ and disable data IRQ.
+ * @param[in] arg Pointer to initialised rotary encoder info structure.
+ * @return void
+ */
 static void rotenc_enable_clk_irq(rotenc_info_t * info)
 {
     gpio_set_intr_type(info->pin_dta, GPIO_INTR_DISABLE);
     gpio_set_intr_type(info->pin_clk, GPIO_INTR_NEGEDGE);
 }
 
+/**
+ * @brief Disable clock IRQ and enable data IRQ.
+ * @param[in] arg Pointer to initialised rotary encoder info structure.
+ * @return void
+ */
 static void rotenc_disable_clk_irq(rotenc_info_t * info)
 {
     gpio_set_intr_type(info->pin_clk, GPIO_INTR_DISABLE);
@@ -276,13 +286,23 @@ esp_err_t rotenc_uninit(rotenc_info_t * info)
     esp_err_t err = ESP_OK;
     if (info) {
         gpio_isr_handler_remove(info->pin_clk);
+        gpio_isr_handler_remove(info->pin_dta);
 
         if (info->queue) {
             vQueueDelete(info->queue);
             info->queue = NULL;
         }
+        
+        gpio_reset_pin(info->pin_clk);
+        gpio_reset_pin(info->pin_dta);
 
         info->event_callback = NULL;
+
+        if(info->button.callback){
+            gpio_isr_handler_remove(info->button.pin);
+            gpio_reset_pin(info->button.pin);
+            info->button.callback = NULL;
+        }
     } else {
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;
