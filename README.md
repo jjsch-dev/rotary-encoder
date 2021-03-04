@@ -35,6 +35,18 @@ The following images show oscillograms with typical events when the encoder is o
 In the configuration menu there are two options that allow you to enable debugging of irqs events and choose the GPIO, please use `idf.py menuconfig`.
 
 The following image shows the one-step rotation without bouncing of the mechanical contacts.
-When the clock goes down, it can be seen how the test channel changes state indicating that the firmware is running the irq that triggers the timer and disables the clock irq, and 1 mS later we see that the control channel changes state indicating that the routine validated the encoder status, and since the data irq had been activated previously, we see that the test pin changes state again, indicating that the cycle is starting again (clock irq activated and data irq deactivated).
+When the clock goes down, it can be seen how the test channel toggle indicating that the firmware is running the irq that triggers the timer and disables the clock irq, and 1 mS later we see that the control channel toggle again indicating that the routine validated the encoder status, and since the data irq had been activated previously, a last toggle indicate that the cycle is starting again (clock irq activated and data irq deactivated).
 
 ![alt text](images/TEK_one_step_ok.png)
+
+The following image shows the fast rotation of several steps, the smallest pulse lasts approximately 3 mS.
+
+![alt text](images/TEK_fast_step_ok.png)
+
+The following image shows the false trips by the mechanical contact, it can be seen that there is no retrigger of the 1mS timer because the routine manages to read the clock pin low.
+
+![alt text](images/TEK_bounce_1ms.png)
+
+The following image shows the false trips by mechanical contact, you can see that there is a 1mS timer re-trigger because the routine does not read the clock pin low.
+
+![alt text](images/TEK_timer.png)
