@@ -67,7 +67,7 @@ typedef enum
 } rotenc_direction_t;
 
 /**
- * @brief Struct represents the current state of the device in terms of incremental position and direction of last movement
+ * @brief Struct position and direction of last movement of the device.
  */
 typedef struct
 {
@@ -109,8 +109,7 @@ typedef struct
 } rotenc_queue_t;
 
 /**
- * @brief Struct carries all the information needed by this driver to manage the rotary encoder device.
- *        The fields of this structure should not be accessed directly.
+ * @brief Struct instance of the driver for a rotary encoder device.
  */
 typedef struct
 {
@@ -124,81 +123,82 @@ typedef struct
     rotenc_event_cb_t event_callback;   ///< Function to call when there is a new position event.
     int irq_data_level;                 ///< The value of the data pin when the irq enters.
     rotenc_button_t button;             ///< Button information.
-} rotenc_info_t;
+} rotenc_handle_t;
 
 /**
- * @brief Initialise the rotary encoder device with the specified GPIO pins and debounce time.
- *        Note: this function assumes that gpio_install_isr_service(0) has already been called.
- * @param[in, out] info Pointer to allocated rotary encoder info structure.
+ * @brief Initialise the rotary encoder device.
+ * @param[in, out] handle Pointer to allocated rotary encoder instance.
  * @param[in] pin_clk GPIO number for clock (A) (triggers the IRQ on a falling edge).
  * @param[in] pin_data GPIO number for data (B) (read only, to detect the direction of rotation).
  * @param[in] debounce_us Period in uS that the anti-bounce takes, by default 1000 uS.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_init(rotenc_info_t * info, gpio_num_t pin_a, gpio_num_t pin_b, uint32_t debounce_us);
+esp_err_t rotenc_init(rotenc_handle_t * handle, gpio_num_t pin_a, gpio_num_t pin_b, uint32_t debounce_us);
 
 /**
  * @brief Reverse (flip) the sense of the direction.
- * @param[in] info Pointer to initialised rotary encoder info structure.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_flip_direction(rotenc_info_t * info);
+esp_err_t rotenc_flip_direction(rotenc_handle_t * handle);
 
 /**
- * @brief Eliminate interrupt handlers and if the event was by queue, delete it.     
- * @param[in] info Pointer to initialised rotary encoder info structure.
+ * @brief Uninitialize the handlers and driver resources.     
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_uninit(rotenc_info_t * info);
+esp_err_t rotenc_uninit(rotenc_handle_t * handle);
 
 /**
  * @brief Configure a queue to proccess the rotary event.
- * @param[in] info Pointer with the initialised rotary encoder info structure.
+ *        Note: If the report is already done by callback, it returns a status error.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @param[in] wait_time_ms Time in mS that waits for the reception of an event.
  * @return ESP_OK if successful, or ESP_ERR_* if an error.
  */
-esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms);
+esp_err_t rotenc_set_event_queue(rotenc_handle_t * handle, uint32_t wait_time_ms);
 
 /**
  * @brief Configure the callback function to proccess the rotary event.
- * @param[in] info Pointer with the initialised rotary encoder info structure.
+ *        Note: If the report is already done by queue, it returns a status error.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @param[in] rotenc_event_cb_t Function to call when there is a new position event.
  * @return ESP_OK if successful, or ESP_ERR_* if an error.
  */
-esp_err_t rotenc_set_event_callback(rotenc_info_t * info, rotenc_event_cb_t callback);
+esp_err_t rotenc_set_event_callback(rotenc_handle_t * handle, rotenc_event_cb_t callback);
 
 /**
  * @brief Wait for FreeRtos queue events. 
- * @param[in] info Pointer with the initialised rotary encoder info structure.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @param[in] event Pointer of the struct to store the event.
  * @return ESP_OK if successful, ESP_TIMEOUT when event timeout expired. or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_wait_event(rotenc_info_t * info, rotenc_event_t* event);
+esp_err_t rotenc_wait_event(rotenc_handle_t * handle, rotenc_event_t* event);
 
 /**
  * @brief Poll the current position of the rotary encoder.
- * @param[in] info Pointer to initialised rotary encoder info structure.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @param[in, out] event Pointer of the struct to store the event.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_polling(const rotenc_info_t * info, rotenc_event_t * event);
+esp_err_t rotenc_polling(const rotenc_handle_t * handle, rotenc_event_t * event);
 
 /**
  * @brief Reset the current position of the rotary encoder to zero.
- * @param[in] info Pointer to initialised rotary encoder info structure.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_reset(rotenc_info_t * info);
+esp_err_t rotenc_reset(rotenc_handle_t * handle);
 
 /**
  * @brief Configure the push button.
- * @param[in] info Pointer with the initialised rotary encoder info structure.
+ * @param[in] handle Pointer to allocated rotary encoder instance.
  * @param[in] pin GPIO number for push button.
  * @param[in] debounce_us Period in uS for the debounce, by default 1000 uS.
  * @param[in] callback Function to call when the button is pressed.
  * @return ESP_OK if successful, or ESP_ERR_* if an error.
  */
-esp_err_t rotenc_init_button(rotenc_info_t * info, 
+esp_err_t rotenc_init_button(rotenc_handle_t * handle, 
                              gpio_num_t pin_b, uint32_t debounce_us, 
                              rotenc_button_cb_t callback);
 

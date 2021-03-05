@@ -21,9 +21,6 @@
  */
 #include <stdbool.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
@@ -34,9 +31,9 @@
 #if CONFIG_PUSH_BUTTON
 static void button_callback(void* arg)
 {
-    rotenc_info_t * info = (rotenc_info_t*) arg;
+    rotenc_handle_t * handle = (rotenc_handle_t*) arg;
     ESP_LOGI(TAG, "Reset rotary encoder");
-    ESP_ERROR_CHECK(rotenc_reset(info));
+    ESP_ERROR_CHECK(rotenc_reset(handle));
 }
 #endif
 
@@ -48,22 +45,21 @@ static void log_event(rotenc_event_t event)
 
 void app_main()
 {
-    // esp32-rotary-encoder requires that the GPIO ISR service is installed before calling rotenc_init()
+    // Verify that the GPIO ISR service is installed, before initializing the driver.
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
 
-    // Initialise the rotary encoder device with the GPIOs for clock (A) and data (B) signals
-    // and the debounce time, by default 1 mS.
-    rotenc_info_t info = { 0 };
-    ESP_ERROR_CHECK(rotenc_init(&info, 
+    // Handle instance of the rotary device, by default 1 mS for debounce time.
+    rotenc_handle_t handle = { 0 };
+    ESP_ERROR_CHECK(rotenc_init(&handle, 
                                 CONFIG_ROT_ENC_CLK_GPIO, 
                                 CONFIG_ROT_ENC_DTA_GPIO, 
                                 CONFIG_ROT_ENC_DEBOUNCE));
 #if CONFIG_FLIP_DIRECTION
-    ESP_ERROR_CHECK(rotenc_flip_direction(&info));
+    ESP_ERROR_CHECK(rotenc_flip_direction(&handle));
 #endif
 
 #if CONFIG_PUSH_BUTTON
-    ESP_ERROR_CHECK(rotenc_init_button(&info, 
+    ESP_ERROR_CHECK(rotenc_init_button(&handle, 
                                        CONFIG_ROT_ENC_BUTTON_GPIO, 
                                        CONFIG_ROT_ENC_BUTTON_DEBOUNCE, 
                                        button_callback));
@@ -71,28 +67,26 @@ void app_main()
 
 #if CONFIG_REPORT_MODE_QUEUE
     ESP_LOGI(TAG, "Report mode by freertos queue");
-    ESP_ERROR_CHECK(rotenc_set_event_queue(&info, 1000));
+    ESP_ERROR_CHECK(rotenc_set_event_queue(&handle, 1000));
 #elif CONFIG_REPORT_MODE_CALLBACK
     ESP_LOGI(TAG, "Report mode by function callback");
-    ESP_ERROR_CHECK(rotenc_set_event_callback(&info, log_event));
+    ESP_ERROR_CHECK(rotenc_set_event_callback(&handle, log_event));
 #elif CONFIG_REPORT_MODE_POLLING
     ESP_LOGI(TAG, "Report mode by polling");
 #endif
 
     while (1) {
 #if CONFIG_REPORT_MODE_QUEUE
-        // Wait for incoming events from the queue.
         rotenc_event_t event = { 0 };
-        if (rotenc_wait_event(&info, &event) == ESP_OK) {
+        if (rotenc_wait_event(&handle, &event) == ESP_OK) {
             log_event(event);
         }
 #elif CONFIG_REPORT_MODE_CALLBACK
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 #elif CONFIG_REPORT_MODE_POLLING
         vTaskDelay(100 / portTICK_PERIOD_MS);
-        // Poll current position and direction
         rotenc_event_t event = { 0 };
-        ESP_ERROR_CHECK(rotenc_polling(&info, &event));
+        ESP_ERROR_CHECK(rotenc_polling(&handle, &event));
         log_event(event);
 #endif
     }
