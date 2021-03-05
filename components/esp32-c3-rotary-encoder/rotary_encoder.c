@@ -30,9 +30,6 @@
 
 #define TAG "rotenc"
 
-// Use a single-item queue so that the last value can be easily overwritten by the interrupt handler
-#define EVENT_QUEUE_LENGTH 1
-
 /**
  * @brief Toggle test pin to debug irqs events.
  * @param[in] void
@@ -94,17 +91,17 @@ static void rotenc_debounce_callback(void *arg)
             info->state.direction = ROTENC_CCW;
         }
 
-        rotenc_event_t queue_event = {
+        rotenc_event_t event = {
             .state = {
                 .position = info->state.position,
                 .direction = info->state.direction,
             },
         };
         
-        if (info->queue) {
-            xQueueOverwrite(info->queue, &queue_event);
+        if (info->q_event.queue) {
+            xQueueOverwrite(info->q_event.queue, &event);
         } else if (info->event_callback) {
-            info->event_callback(queue_event);
+            info->event_callback(event);
         }
     } else { 
         rotenc_enable_clk_irq(info);
@@ -193,7 +190,7 @@ esp_err_t rotenc_init(rotenc_info_t * info,
         info->debounce_us = debounce_us;
         info->flip_direction = false;
         info->event_callback = NULL;
-        info->queue = NULL;
+        info->q_event.queue = NULL;
  
         const esp_timer_create_args_t debounce_timer_args = {
             .callback = &rotenc_debounce_callback,
@@ -227,7 +224,6 @@ esp_err_t rotenc_init(rotenc_info_t * info,
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;
     }
-
     return err;
 }
 
@@ -265,7 +261,6 @@ esp_err_t rotenc_init_button(rotenc_info_t * info,
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;
     }
-
     return err;
 }
 
@@ -288,9 +283,9 @@ esp_err_t rotenc_uninit(rotenc_info_t * info)
         gpio_isr_handler_remove(info->pin_clk);
         gpio_isr_handler_remove(info->pin_dta);
 
-        if (info->queue) {
-            vQueueDelete(info->queue);
-            info->queue = NULL;
+        if (info->q_event.queue) {
+            vQueueDelete(info->q_event.queue);
+            info->q_event.queue = NULL;
         }
         
         gpio_reset_pin(info->pin_clk);
@@ -315,7 +310,7 @@ esp_err_t rotenc_set_event_callback(rotenc_info_t * info, rotenc_event_cb_t call
 esp_err_t err = ESP_OK;
 
     if (info) {
-        if (!info->queue) {
+        if (!info->q_event.queue) {
             info->event_callback = callback;
         } else {
             ESP_LOGE(TAG, "could not be created because there is a queue created.");
@@ -325,7 +320,6 @@ esp_err_t err = ESP_OK;
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;
     }
-
     return err;
 }
 
@@ -335,11 +329,11 @@ esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms)
 
     if (info) {
         if (!info->event_callback) {   
-            info->queue = xQueueCreate(EVENT_QUEUE_LENGTH, sizeof(rotenc_event_t));
+            info->q_event.queue = xQueueCreate(1, sizeof(rotenc_event_t));
 
-            info->event_wait_time_ms = wait_time_ms;
+            info->q_event.wait_ms = wait_time_ms;
 
-            if (!info->queue) {
+            if (!info->q_event.queue) {
                 ESP_LOGE(TAG, "queue could not be created");
                 err = ESP_ERR_NO_MEM;
             }
@@ -351,33 +345,30 @@ esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms)
         ESP_LOGE(TAG, "info is NULL");
         err = ESP_ERR_INVALID_ARG;
     }
-
     return err;
 }
 
 esp_err_t rotenc_wait_event(rotenc_info_t * info, rotenc_event_t* event)
 {
     esp_err_t err = ESP_OK;
-    if (info && info->queue && event) {
-        if (xQueueReceive(info->queue, event, 
-                          info->event_wait_time_ms / portTICK_PERIOD_MS) != pdTRUE) {
+    if (info && info->q_event.queue && event) {
+        if (xQueueReceive(info->q_event.queue, event, 
+                          info->q_event.wait_ms / portTICK_PERIOD_MS) != pdTRUE) {
             err = ESP_ERR_TIMEOUT;
         }
     } else {
         ESP_LOGE(TAG, "info and/or queue, event is NULL");
         err = ESP_ERR_INVALID_ARG;
     }
-
     return err;
 }
 
-esp_err_t rotenc_get_state(const rotenc_info_t * info, rotenc_state_t * state)
+esp_err_t rotenc_polling(const rotenc_info_t * info, rotenc_event_t * event)
 {
     esp_err_t err = ESP_OK;
-    if (info && state) {
-        // make a snapshot of the state
-        state->position = info->state.position;
-        state->direction = info->state.direction;
+    if (info && event) {
+        event->state.position = info->state.position;
+        event->state.direction = info->state.direction;
     } else {
         ESP_LOGE(TAG, "info and/or state is NULL");
         err = ESP_ERR_INVALID_ARG;

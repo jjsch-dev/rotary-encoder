@@ -56,8 +56,6 @@
 extern "C" {
 #endif
 
-typedef int32_t rotenc_position_t;
-
 /**
  * @brief Enum representing the direction of rotation.
  */
@@ -73,7 +71,7 @@ typedef enum
  */
 typedef struct
 {
-    rotenc_position_t position;     ///< Numerical position since reset. 
+    int32_t position;               ///< Numerical position since reset. 
     rotenc_direction_t direction;   ///< Direction of last movement. Set to NOT_SET on reset.
 } rotenc_state_t;
 
@@ -110,6 +108,15 @@ typedef struct
 } rotenc_button_t;
 
 /**
+ * @brief Struct contains information to the events by queue.
+ */
+typedef struct 
+{
+    QueueHandle_t queue;                ///< Handle for event queue.
+    uint32_t wait_ms;                   ///< Time in mS that waits for the reception of an event.
+} rotenc_queue_t;
+
+/**
  * @brief Struct carries all the information needed by this driver to manage the rotary encoder device.
  *        The fields of this structure should not be accessed directly.
  */
@@ -117,11 +124,10 @@ typedef struct
 {
     gpio_num_t pin_clk;                 ///< GPIO for clock (A) from the rotary encoder device.
     gpio_num_t pin_dta;                 ///< GPIO for data (B) from the rotary encoder device.
-    QueueHandle_t queue;                ///< Handle for event queue.
+    rotenc_queue_t q_event;             ///< Information for events by queue.
     esp_timer_handle_t debounce_timer;  ///< Software timer to apply the anti-bounce.
     uint32_t debounce_us;               ///< Period in uS that the anti-bounce takes. 
     volatile rotenc_state_t state;      ///< Device state.
-    uint32_t event_wait_time_ms;        ///< Time in mS that waits for the reception of an event.
     bool flip_direction;                ///< Reverse (flip) the sense of the direction.
     rotenc_event_cb_t event_callback;   ///< Function to call when there is a new position event.
     int irq_data_level;                 ///< The value of the data pin when the irq enters.
@@ -129,8 +135,7 @@ typedef struct
 } rotenc_info_t;
 
 /**
- * @brief Initialise the rotary encoder device with the specified GPIO pins and full step increments.
- *        This function will set up the GPIOs as needed,
+ * @brief Initialise the rotary encoder device with the specified GPIO pins and debounce time.
  *        Note: this function assumes that gpio_install_isr_service(0) has already been called.
  * @param[in, out] info Pointer to allocated rotary encoder info structure.
  * @param[in] pin_clk GPIO number for clock (A) (triggers the IRQ on a falling edge).
@@ -142,15 +147,13 @@ esp_err_t rotenc_init(rotenc_info_t * info, gpio_num_t pin_a, gpio_num_t pin_b, 
 
 /**
  * @brief Reverse (flip) the sense of the direction.
- *        Use this if clockwise/counterclockwise are not what you expect.
  * @param[in] info Pointer to initialised rotary encoder info structure.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
 esp_err_t rotenc_flip_direction(rotenc_info_t * info);
 
 /**
- * @brief Eliminate interrupt handlers and if the event was by queue, delete it.
- *        
+ * @brief Eliminate interrupt handlers and if the event was by queue, delete it.     
  * @param[in] info Pointer to initialised rotary encoder info structure.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
@@ -173,7 +176,7 @@ esp_err_t rotenc_set_event_queue(rotenc_info_t * info, uint32_t wait_time_ms);
 esp_err_t rotenc_set_event_callback(rotenc_info_t * info, rotenc_event_cb_t callback);
 
 /**
- * @brief Wait queue events. 
+ * @brief Wait for FreeRtos queue events. 
  * @param[in] info Pointer with the initialised rotary encoder info structure.
  * @param[in] event Pointer of the struct to store the event.
  * @return ESP_OK if successful, ESP_TIMEOUT when event timeout expired. or ESP_ERR_* if an error occurred.
@@ -181,12 +184,12 @@ esp_err_t rotenc_set_event_callback(rotenc_info_t * info, rotenc_event_cb_t call
 esp_err_t rotenc_wait_event(rotenc_info_t * info, rotenc_event_t* event);
 
 /**
- * @brief Get the current position of the rotary encoder.
+ * @brief Poll the current position of the rotary encoder.
  * @param[in] info Pointer to initialised rotary encoder info structure.
- * @param[in, out] state Pointer to an allocated rotenc_state_t struct that will
+ * @param[in, out] event Pointer of the struct to store the event.
  * @return ESP_OK if successful, ESP_FAIL or ESP_ERR_* if an error occurred.
  */
-esp_err_t rotenc_get_state(const rotenc_info_t * info, rotenc_state_t * state);
+esp_err_t rotenc_polling(const rotenc_info_t * info, rotenc_event_t * event);
 
 /**
  * @brief Reset the current position of the rotary encoder to zero.

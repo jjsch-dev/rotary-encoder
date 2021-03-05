@@ -68,7 +68,7 @@ Callback Example
 ----------------
 ```c
     
-    static void rotenc_log_event(rotenc_event_t event)
+    static void log_event(rotenc_event_t event)
     {
         ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
                   event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET")  ;
@@ -82,7 +82,7 @@ Callback Example
                                     CONFIG_ROT_ENC_CLK_GPIO, 
                                     CONFIG_ROT_ENC_DTA_GPIO, 
                                     CONFIG_ROT_ENC_DEBOUNCE));
-        ESP_ERROR_CHECK(rotenc_set_event_callback(&info, rotenc_log_event));
+        ESP_ERROR_CHECK(rotenc_set_event_callback(&info, log_event));
 
         while (1) {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -100,7 +100,7 @@ Push Button and Queue Example
         ESP_ERROR_CHECK(rotenc_reset(info));
     }
 
-    static void rotenc_log_event(rotenc_event_t event)
+    static void log_event(rotenc_event_t event)
     {
         ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
                   event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET")  ;
@@ -124,7 +124,7 @@ Push Button and Queue Example
             // Wait for incoming events on the event queue.
             rotenc_event_t event = { 0 };
             if (rotenc_wait_event(&info, &event) == ESP_OK) {
-                rotenc_log_event(event);
+                log_event(event);
             }
         }
     }
@@ -133,6 +133,12 @@ Push Button and Queue Example
 Polling Example
 ----------------
 ```c
+    static void log_event(rotenc_event_t event)
+    {
+        ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
+                  event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET")  ;
+    }
+
     void app_main()
     {
         /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
@@ -143,13 +149,11 @@ Polling Example
                                     CONFIG_ROT_ENC_DEBOUNCE));
 
         while (1) {
-            rotencrotenc_state_t state = { 0 };
-            ESP_ERROR_CHECK(rotenc_get_state(&info, &state));
-        
-            ESP_LOGI(TAG, "Poll: position %d, direction %s", state.position,
-                     state.direction ? (state.direction == ROTENC_DIRECTION_CLOCKWISE ? "CW" : "CCW") : "NOT_SET");
+            rotenc_event_t event = { 0 };
+            ESP_ERROR_CHECK(rotenc_polling(&info, &event));
+            rotenc_log_event(event);
 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
     }
 ```

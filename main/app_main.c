@@ -40,7 +40,7 @@ static void button_callback(void* arg)
 }
 #endif
 
-static void rotenc_log_event(rotenc_event_t event)
+static void log_event(rotenc_event_t event)
 {
     ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
                   event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET");
@@ -74,7 +74,7 @@ void app_main()
     ESP_ERROR_CHECK(rotenc_set_event_queue(&info, 1000));
 #elif CONFIG_REPORT_MODE_CALLBACK
     ESP_LOGI(TAG, "Report mode by function callback" );
-    ESP_ERROR_CHECK(rotenc_set_event_callback(&info, rotenc_log_event));
+    ESP_ERROR_CHECK(rotenc_set_event_callback(&info, log_event));
 #endif
 
     while (1) {
@@ -82,19 +82,16 @@ void app_main()
         // Wait for incoming events from the queue.
         rotenc_event_t event = { 0 };
         if (rotenc_wait_event(&info, &event) == ESP_OK) {
-            rotenc_log_event(event);
+            log_event(event);
         }
 #elif CONFIG_REPORT_MODE_CALLBACK
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 #elif CONFIG_REPORT_MODE_POLLING
-        // Poll current position and direction
         vTaskDelay(100 / portTICK_PERIOD_MS);
-        
-        rotencrotenc_state_t state = { 0 };
-        ESP_ERROR_CHECK(rotenc_get_state(&info, &state));
-        
-        ESP_LOGI(TAG, "Poll: position %d, direction %s", state.position,
-        state.direction ? (state.direction == ROTENC_DIRECTION_CLOCKWISE ? "CW" : "CCW") : "NOT_SET");
+        // Poll current position and direction
+        rotenc_event_t event = { 0 };
+        ESP_ERROR_CHECK(rotenc_polling(&info, &event));
+        log_event(event);
 #endif
     }
 }
