@@ -92,10 +92,8 @@ static void rotenc_debounce_callback(void *arg)
         }
 
         rotenc_event_t event = {
-            .state = {
-                .position = info->state.position,
-                .direction = info->state.direction,
-            },
+            .position = info->state.position,
+            .direction = info->state.direction,
         };
         
         if (info->q_event.queue) {
@@ -367,8 +365,8 @@ esp_err_t rotenc_polling(const rotenc_info_t * info, rotenc_event_t * event)
 {
     esp_err_t err = ESP_OK;
     if (info && event) {
-        event->state.position = info->state.position;
-        event->state.direction = info->state.direction;
+        event->position = info->state.position;
+        event->direction = info->state.direction;
     } else {
         ESP_LOGE(TAG, "info and/or state is NULL");
         err = ESP_ERR_INVALID_ARG;

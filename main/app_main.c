@@ -42,8 +42,8 @@ static void button_callback(void* arg)
 
 static void log_event(rotenc_event_t event)
 {
-    ESP_LOGI(TAG, "Event: position %d, direction %s", event.state.position,
-                  event.state.direction ? (event.state.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET");
+    ESP_LOGI(TAG, "Event: position %d, direction %s", event.position,
+                  event.direction ? (event.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET");
 }
 
 void app_main()

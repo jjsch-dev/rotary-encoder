@@ -73,14 +73,6 @@ typedef struct
 {
     int32_t position;               ///< Numerical position since reset. 
     rotenc_direction_t direction;   ///< Direction of last movement. Set to NOT_SET on reset.
-} rotenc_state_t;
-
-/**
- * @brief Struct represents an event, used to communicate current position to a waiting task
- */
-typedef struct
-{
-    rotenc_state_t state;           ///< The device state corresponding to this event
 } rotenc_event_t;
 
 /**
@@ -127,7 +119,7 @@ typedef struct
     rotenc_queue_t q_event;             ///< Information for events by queue.
     esp_timer_handle_t debounce_timer;  ///< Software timer to apply the anti-bounce.
     uint32_t debounce_us;               ///< Period in uS that the anti-bounce takes. 
-    volatile rotenc_state_t state;      ///< Device state.
+    volatile rotenc_event_t state;      ///< Device state.
     bool flip_direction;                ///< Reverse (flip) the sense of the direction.
     rotenc_event_cb_t event_callback;   ///< Function to call when there is a new position event.
     int irq_data_level;                 ///< The value of the data pin when the irq enters.
