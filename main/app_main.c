@@ -26,6 +26,13 @@
 
 #include "rotary_encoder.h"
 
+/**
+ *  NOTE: This component is part of the espressif project esp-rainmaker.
+ *        https://github.com/espressif/esp-rainmaker
+ * 
+ *        The led pin is configured with the macro: CONFIG_WS2812_LED_GPIO
+ *        please use idf.py menuconfig. 
+ */
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     #include <ws2812_led.h>
     #define DEFAULT_SATURATION  100
