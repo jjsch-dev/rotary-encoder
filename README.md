@@ -159,3 +159,10 @@ Polling Example
         }
     }
 ```
+
+## Operation video
+The following section shows the operation of the encoder on the prototype board, when the user moves the encoder shaft to the left, the direction reported on the monitor would be anti-clockwise, and clockwise when moving it to the right. You can also see the reset of the counter when the user presses the encoder shaft. And finally, you can see the oscillogram that it generates every time it detects a falling edge in the clock channel.
+
+![](images/rotenc_demo.gif)
+
+![](images/visual_code_flash_monitor.gif)
