@@ -13,6 +13,7 @@
     "idf.flashType": "UART",
     "idf.port": "/dev/ttyUSB2",
     "files.associations": {
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "ws2812_led.h": "c"
     }
 }

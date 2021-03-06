@@ -26,6 +26,12 @@
 
 #include "rotary_encoder.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    #include <ws2812_led.h>
+    #define DEFAULT_SATURATION  100
+    #define DEFAULT_BRIGHTNESS  50
+#endif
+
 #define TAG "app"
 
 #if CONFIG_PUSH_BUTTON
@@ -34,19 +40,36 @@ static void button_callback(void* arg)
     rotenc_handle_t * handle = (rotenc_handle_t*) arg;
     ESP_LOGI(TAG, "Reset rotary encoder");
     ESP_ERROR_CHECK(rotenc_reset(handle));
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    ws2812_led_clear();
+#endif
 }
 #endif
 
-static void log_event(rotenc_event_t event)
+static void event_callback(rotenc_event_t event)
 {
     ESP_LOGI(TAG, "Event: position %d, direction %s", event.position,
                   event.direction ? (event.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET");
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    uint16_t g_hue = (uint16_t) (event.position * 10);
+    ws2812_led_set_hsv(g_hue, DEFAULT_SATURATION, DEFAULT_BRIGHTNESS);
+#endif
 }
 
 void app_main()
 {
     // Verify that the GPIO ISR service is installed, before initializing the driver.
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    esp_err_t err = ws2812_led_init();
+    if  (err == ESP_OK) {
+        ws2812_led_clear();
+    }
+    ESP_LOGI(TAG, "ws2812_led_init: %d\n", err);
+#endif
 
     // Handle instance of the rotary device, by default 1 mS for debounce time.
     rotenc_handle_t handle = { 0 };
@@ -70,7 +93,7 @@ void app_main()
     ESP_ERROR_CHECK(rotenc_set_event_queue(&handle, 1000));
 #elif CONFIG_REPORT_MODE_CALLBACK
     ESP_LOGI(TAG, "Report mode by function callback");
-    ESP_ERROR_CHECK(rotenc_set_event_callback(&handle, log_event));
+    ESP_ERROR_CHECK(rotenc_set_event_callback(&handle, event_callback));
 #elif CONFIG_REPORT_MODE_POLLING
     ESP_LOGI(TAG, "Report mode by polling");
 #endif
@@ -79,7 +102,7 @@ void app_main()
 #if CONFIG_REPORT_MODE_QUEUE
         rotenc_event_t event = { 0 };
         if (rotenc_wait_event(&handle, &event) == ESP_OK) {
-            log_event(event);
+            event_callback(event);
         }
 #elif CONFIG_REPORT_MODE_CALLBACK
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -87,7 +110,7 @@ void app_main()
         vTaskDelay(100 / portTICK_PERIOD_MS);
         rotenc_event_t event = { 0 };
         ESP_ERROR_CHECK(rotenc_polling(&handle, &event));
-        log_event(event);
+        event_callback(event);
 #endif
     }
 }
