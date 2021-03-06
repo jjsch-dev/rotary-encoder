@@ -54,15 +54,15 @@ The following image shows the false trips by mechanical contact, you can see tha
 ![alt text](images/TEK_timer.png)
 
 ## Brief description of the API
-To use the component, you must get the handle of the instance `rotenc_handle_t` with the function` rotenc_init`, which takes as parameters the pins where the clock (A) and the data (B) are connected plus the time for the anti-bounce, if successful, returns ESP_OK.
+To use the component, you must get the handle of the instance `rotenc_handle_t` with the function `rotenc_init`, which takes as parameters the pins where the clock (A) and the data (B) are connected plus the time for the anti-bounce, if successful, returns ESP_OK.
 
 The driver can notify the event in three different ways, by Polling, by Freertos Queue, or through function callback. Queuing and polling have no requirements, but the callback function should be used very carefully so as not to perform blocking/delaying operations, as this could affect the performance of the esp_timer component.
-
-Note: if you use the example application you can configure the pins and the notification mode with the `idf.py menuconfig`.
 
 To set the callback, you have to use the `rotenc_set_event_callback` function, and for the message queue `rotenc_set_event_queue` and wait with the `rotenc_wait_event function`. Both return a `rotenc_event_t` structure that contains the position fields and the detected direction of rotation.
 
 For mechanical encoders with pushbuttons, and although this functionality can be implemented very easily with espressif idf, a callback can be configured with the `rotenc_init_button` function.
+
+Note: if you use the example application you can configure the pins and the notification mode with the `idf.py menuconfig`.
 
 Callback Example
 ----------------
