@@ -78,7 +78,8 @@ void app_main()
     ESP_LOGI(TAG, "ws2812_led_init: %d\n", err);
 #endif
 
-    // Handle instance of the rotary device, by default 1 mS for debounce time.
+    // Initialize the handle instance of the rotary device, 
+    // by default it uses 1 mS for the debounce time.
     rotenc_handle_t handle = { 0 };
     ESP_ERROR_CHECK(rotenc_init(&handle, 
                                 CONFIG_ROT_ENC_CLK_GPIO, 

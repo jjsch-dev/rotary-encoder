@@ -76,7 +76,8 @@ Callback Example
 
     void app_main()
     {
-        /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+        // Initialize the handle instance of the rotary device, 
+        // by default it uses 1 mS for the debounce time.
         rotenc_handle_t handle = { 0 };
         ESP_ERROR_CHECK(rotenc_init(&handle, 
                                     CONFIG_ROT_ENC_CLK_GPIO, 
@@ -108,7 +109,8 @@ Push Button and Queue Example
 
     void app_main()
     {
-        /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+        // Initialize the handle instance of the rotary device, 
+        // by default it uses 1 mS for the debounce time.
         rotenc_handle_t handle = { 0 };
         ESP_ERROR_CHECK(rotenc_init(&handle, 
                                     CONFIG_ROT_ENC_CLK_GPIO, 
@@ -121,7 +123,6 @@ Push Button and Queue Example
                                        button_callback));
 
         while (1) {
-            // Wait for incoming events on the event queue.
             rotenc_event_t event = { 0 };
             if (rotenc_wait_event(&handle, &event) == ESP_OK) {
                 event_callback(event);
@@ -141,7 +142,8 @@ Polling Example
 
     void app_main()
     {
-        /* Initialise the rotary encoder device with the GPIOs for Clock (A) and Data (B)  signals and debounce timeout*/
+        // Initialize the handle instance of the rotary device, 
+        // by default it uses 1 mS for the debounce time.
         rotenc_handle_t handle = { 0 };
         ESP_ERROR_CHECK(rotenc_init(&handle, 
                                     CONFIG_ROT_ENC_CLK_GPIO, 
