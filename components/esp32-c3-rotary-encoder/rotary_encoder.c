@@ -30,8 +30,6 @@
 #include "rotary_encoder.h"
 
 #include "esp_log.h"
-#include "driver/gpio.h"
-#include "esp_timer.h"
 
 #define TAG "rotenc"
 
@@ -54,8 +52,8 @@ static void rotenc_toggle_test_pin(void)
  */
 static void rotenc_enable_clk_irq(rotenc_handle_t * handle)
 {
-    gpio_set_intr_type(handle->pin_dta, GPIO_INTR_DISABLE);
-    gpio_set_intr_type(handle->pin_clk, GPIO_INTR_NEGEDGE);
+   gpio_intr_disable(handle->pin_dta);
+   gpio_intr_enable(handle->pin_clk);
 }
 
 /**
@@ -65,8 +63,8 @@ static void rotenc_enable_clk_irq(rotenc_handle_t * handle)
  */
 static void rotenc_disable_clk_irq(rotenc_handle_t * handle)
 {
-    gpio_set_intr_type(handle->pin_clk, GPIO_INTR_DISABLE);
-    gpio_set_intr_type(handle->pin_dta, GPIO_INTR_ANYEDGE);
+    gpio_intr_disable(handle->pin_clk);
+    gpio_intr_enable(handle->pin_dta);
 }
 
 /**
@@ -75,7 +73,7 @@ static void rotenc_disable_clk_irq(rotenc_handle_t * handle)
  * @param[in] arg Pointer to allocated rotary encoder instance.
  * @return void
  */
-static void rotenc_debounce_callback(void *arg)
+static void IRAM_ATTR rotenc_debounce_callback(void *arg)
 {
     rotenc_handle_t * handle = (rotenc_handle_t*) arg;
 
@@ -116,7 +114,7 @@ static void rotenc_debounce_callback(void *arg)
  * @param[in] args Pointer to allocated rotary encoder instance.
  * @return void
  */
-static void rotenc_isr_dta(void * args)
+static void IRAM_ATTR rotenc_isr_dta(void * args)
 {
     rotenc_handle_t * handle = (rotenc_handle_t *)args;
     rotenc_enable_clk_irq(handle);
@@ -129,7 +127,7 @@ static void rotenc_isr_dta(void * args)
  * @param[in] args Pointer to allocated rotary encoder instance.
  * @return void
  */
-static void rotenc_isr_clk(void * args)
+static void IRAM_ATTR rotenc_isr_clk(void * args)
 {
     rotenc_handle_t * handle = (rotenc_handle_t *)args;
     rotenc_disable_clk_irq(handle);
@@ -139,7 +137,7 @@ static void rotenc_isr_clk(void * args)
     handle->irq_data_level = gpio_get_level(handle->pin_dta);
 
     esp_timer_stop(handle->debounce_timer);
-    ESP_ERROR_CHECK(esp_timer_start_once(handle->debounce_timer, handle->debounce_us));       
+    ESP_ERROR_CHECK(esp_timer_start_once(handle->debounce_timer, handle->debounce_us));    
 }
 
 /**
@@ -148,7 +146,7 @@ static void rotenc_isr_clk(void * args)
  * @param[in] arg Pointer to allocated rotary encoder instance.
  * @return void
  */
-static void rotenc_button_timer_callback(void *arg)
+static void IRAM_ATTR rotenc_button_timer_callback(void *arg)
 {
     rotenc_handle_t * handle = (rotenc_handle_t*) arg;
 
@@ -170,7 +168,7 @@ static void rotenc_button_timer_callback(void *arg)
  * @param[in] args Pointer to allocated rotary encoder instance.
  * @return void
  */
-static void rotenc_button_isr(void * args)
+static void IRAM_ATTR rotenc_button_isr(void * args)
 {
     rotenc_handle_t * handle = (rotenc_handle_t *)args;
     gpio_set_intr_type(handle->button.pin, GPIO_INTR_DISABLE);
@@ -204,23 +202,22 @@ esp_err_t rotenc_init(rotenc_handle_t * handle,
 
         // configure GPIOs
         gpio_reset_pin(handle->pin_clk);
-        gpio_pad_select_gpio(handle->pin_clk);
         gpio_set_pull_mode(handle->pin_clk, GPIO_PULLUP_ONLY);
         gpio_set_direction(handle->pin_clk, GPIO_MODE_INPUT);
         gpio_set_intr_type(handle->pin_clk, GPIO_INTR_NEGEDGE);
 
+
         gpio_reset_pin(handle->pin_dta);
-        gpio_pad_select_gpio(handle->pin_dta);
         gpio_set_pull_mode(handle->pin_dta, GPIO_PULLUP_ONLY);
         gpio_set_direction(handle->pin_dta, GPIO_MODE_INPUT);
         gpio_set_intr_type(handle->pin_dta, GPIO_INTR_ANYEDGE);
-
+        
+        
         // install interrupt handlers
         gpio_isr_handler_add(handle->pin_clk, rotenc_isr_clk, handle);
         gpio_isr_handler_add(handle->pin_dta, rotenc_isr_dta, handle);
-
 #if CONFIG_TEST_PIN_ENABLE
-        gpio_pad_select_gpio(CONFIG_ROT_ENC_TEST_PIN_GPIO);
+        gpio_reset_pin(CONFIG_ROT_ENC_TEST_PIN_GPIO);
         gpio_set_direction(CONFIG_ROT_ENC_TEST_PIN_GPIO, GPIO_MODE_INPUT_OUTPUT);
 #endif
     } else {
@@ -249,7 +246,6 @@ esp_err_t rotenc_init_button(rotenc_handle_t * handle,
             ESP_ERROR_CHECK(esp_timer_create(&button_timer_args, &handle->button.timer));
 
             gpio_reset_pin(handle->button.pin);
-            gpio_pad_select_gpio(handle->button.pin);
             gpio_set_pull_mode(handle->button.pin, GPIO_PULLUP_ONLY);
             gpio_set_direction(handle->button.pin, GPIO_MODE_INPUT);
             gpio_set_intr_type(handle->button.pin, GPIO_INTR_NEGEDGE);

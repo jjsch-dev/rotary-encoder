@@ -56,6 +56,7 @@
 #include "freertos/queue.h"
 #include "esp_err.h"
 #include "driver/gpio.h"
+#include "esp_timer.h"
 
 #ifdef __cplusplus
 extern "C" {

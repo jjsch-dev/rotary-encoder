@@ -58,7 +58,7 @@ static void button_callback(void* arg)
 
 static void event_callback(rotenc_event_t event)
 {
-    ESP_LOGI(TAG, "Event: position %d, direction %s", event.position,
+    ESP_LOGI(TAG, "Event: position %d, direction %s", (int)event.position,
                   event.direction ? (event.direction == ROTENC_CW ? "CW" : "CCW") : "NOT_SET");
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
